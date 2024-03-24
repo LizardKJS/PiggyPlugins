@@ -135,6 +135,10 @@ public class PowerSkillerPlugin extends Plugin {
             case DROP_ITEMS:
                 dropItems();
                 break;
+            case FORESTRY:
+                findTreeRoots();
+                setTimeout();
+                break;
         }
     }
 
@@ -165,6 +169,11 @@ public class PowerSkillerPlugin extends Plugin {
             return State.DROP_ITEMS;
         }
 
+
+        if (config.useForestryTreeNotClosest() && config.expectedAction().equalsIgnoreCase("chop") && hasTreeRoots()) {
+            // Override other tasks and cut tree roots
+            return State.FORESTRY;
+        }
 
         // default it'll look for an object.
         return State.FIND_OBJECT;
@@ -314,5 +323,17 @@ public class PowerSkillerPlugin extends Plugin {
         }else{
             breakHandler.startPlugin(this);
         }
+    }
+
+    private boolean hasTreeRoots() {
+        List<TileObject> treeRoots = TileObjects.search().withName("Tree roots").result();
+        return !treeRoots.isEmpty();
+    }
+
+    private void findTreeRoots() {
+        TileObjects.search().withName("Tree roots").nearestToPlayer().ifPresent(tileObject -> {
+            ObjectComposition comp = TileObjectQuery.getObjectComposition(tileObject);
+            TileObjectInteraction.interact(tileObject, comp.getActions()[0]); // Cut the tree roots
+        });
     }
 }
